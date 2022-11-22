@@ -3,4 +3,4 @@ As a member of team redzone, I'm working on red tide prediction model nowadays. 
 This is not team git repository. I've made this personally.
 
 ## merged with lms directory
-I had separated workplace in Aiffel's LMS server. So I merged.
+I had separated workplace in Aiffel's LMS server. So I merged. But this directory need some arrangement while they contains too many duplicates.
