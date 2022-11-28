@@ -55,6 +55,30 @@ def decode(self, label, z = None):
 
 
 
+##########################################
+#   Utils to save and read pickle files  #
+##########################################
+
+def save_data(file_name, data):
+    """
+    Saves data on file_name.pickle.
+    """
+    with open((file_name+'.pickle'), 'wb') as openfile:
+        print(type(data))
+        pickle.dump(data, openfile)
+
+
+def read_data(file_name):
+    """
+    Reads file_name.pickle and returns its content.
+    """
+    with (open((file_name+'.pickle'), "rb")) as openfile:
+        while True:
+            try:
+                objects=pickle.load(openfile)
+            except EOFError:
+                break
+    return objects
 
 ########################
 #  Utils for plotting  #
@@ -81,7 +105,7 @@ def batch_generator(batch_dim, test_labels, model_name):
             yield np.asarray(batch_imgs), np.asarray(batch_labels)
 
 
-def get_image(image_path, model_name, img_size = 128, img_resize = 64, x = 25, y = 45):
+def get_image(image_path, model_name, img_resize = 1024):
     """
     Crops, resizes and normalizes the target image.
         - If model_name == Dense, the image is returned as a flattened numpy array with dim (64*64*3)
@@ -89,7 +113,6 @@ def get_image(image_path, model_name, img_size = 128, img_resize = 64, x = 25, y
     """
 
     img = cv2.imread(image_path)
-    img = img[y:y+img_size, x:x+img_size]
     img = cv2.resize(img, (img_resize, img_resize))
     img = np.array(img, dtype='float32')
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
@@ -107,23 +130,31 @@ def create_image_batch(labels, model_name):
     """
     imgs = []
     imgs_id = [item[0] for item in labels]
+    
+    #hard code few lines...
+    test_data = read_data("./test_data")
+    img_paths = test_data['img_paths']
+    path_cols=[0,1]
 
     for i in imgs_id:
-        image_path ='/input/CelebA/img_align_celeba/img_align_celeba/' + i
-        imgs.append(get_image(image_path, model_name))
+        img = []
+        for j in range(len(path_cols)):
+            image_path = img_paths[i][j]
+            img.append(get_image(image_path, model_name))
+        imgs.append(np.concatenate(tuple(img),axis=-1))
 
     return imgs
 
 
 
-def convert_batch_to_image_grid(image_batch, dim = 64):
-    reshaped = (image_batch.reshape(4, 8, dim, dim, 3)
+def convert_batch_to_image_grid(image_batch, dim = 1024):
+    reshaped = (image_batch.reshape(4, 1, dim, dim, 6)
               .transpose(0, 2, 1, 3, 4)
-              .reshape(4 * dim, 8 * dim, 3))
-    return reshaped 
+              .reshape(4 * dim, dim, 6))
+    return reshaped[:,:,:3]
 
 
-def imshow_grid(imgs, model_name, shape=[2, 5], name='default', save=False):
+def imshow_grid(imgs, model_name, shape=[10, 1], name='default', save=False):
     """Plot images in a grid of a given shape."""
     fig = plt.figure(1)
     grid = ImageGrid(fig, 111, nrows_ncols=shape, axes_pad=0.05)
@@ -131,7 +162,7 @@ def imshow_grid(imgs, model_name, shape=[2, 5], name='default', save=False):
     if model_name == "Dense":
         for i in range(size):
             grid[i].axis('off')
-            grid[i].imshow(imgs[i].reshape(64, 64, 3))  
+            grid[i].imshow(imgs[i].reshape(1024, 1024, 3))  
         if save:
             plt.savefig(str(name) + '.png')
             plt.clf()
@@ -147,28 +178,3 @@ def imshow_grid(imgs, model_name, shape=[2, 5], name='default', save=False):
         else:
             plt.show()
 
-
-##########################################
-#   Utils to save and read pickle files  #
-##########################################
-
-def save_data(file_name, data):
-    """
-    Saves data on file_name.pickle.
-    """
-    with open((file_name+'.pickle'), 'wb') as openfile:
-        print(type(data))
-        pickle.dump(data, openfile)
-
-
-def read_data(file_name):
-    """
-    Reads file_name.pickle and returns its content.
-    """
-    with (open((file_name+'.pickle'), "rb")) as openfile:
-        while True:
-            try:
-                objects=pickle.load(openfile)
-            except EOFError:
-                break
-    return objects

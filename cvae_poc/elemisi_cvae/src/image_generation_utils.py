@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
-from utils import batch_generator, convert_batch_to_image_grid
+from elemisi_cvae.src.utils import batch_generator, convert_batch_to_image_grid
 
 
 
@@ -19,32 +19,25 @@ def image_generation(model, test_data, target_attr = None, save_path = None):
 
     # Vector of user-defined attributes.
     if target_attr:       
-        attr_vect = np.zeros(len(test_data["attributes"]))
-        for attr in target_attr:
-            attr_vect[attr] = 1
-        labels = np.tile(attr_vect, reps = [test_data['batch_size'], 1])
-        print("Generation of 16 images with attributes: ", target_attr )
-
+        pass
    # Vector of attributes taken from the test set.
     else:        
         batch_gen = batch_generator(test_data['batch_size'], test_data['test_img_ids'], model_name = 'Conv')
         _, labels = next(batch_gen)
-        print("Generation of 16 images with fixed attributes.")
-
+        print("Generation of 4 images with fixed attributes.")
 
     z_cond = model.reparametrization(input_label = labels, z_mean = 1.0, z_log_var=0.3)
     logits = model.decoder(z_cond, is_train = False)
     generated = tf.nn.sigmoid(logits)
   
-
     # Plot
-    f = plt.figure(figsize=(10,10))
+    f = plt.figure(figsize=(10,40))
     ax = f.add_subplot(1,1,1)
     ax.imshow(convert_batch_to_image_grid(generated.numpy()))
     plt.axis('off')
 
     if save_path :
-      plt.savefig(save_path + "generation_" + str(target_attr) + "_.png")
+        plt.savefig(save_path + "generation_" + str(target_attr) + "_.png")
     
     plt.show()
     plt.clf()
@@ -64,7 +57,7 @@ def image_reconstruction(model, test_data, save_path=None):
     images, labels= next(batch_gen)
     model_output= model((images, labels), is_train = False)
     
-    f = plt.figure(figsize=(64,40))
+    f = plt.figure(figsize=(64,160))
     ax = f.add_subplot(1,2,1)
     ax.imshow(convert_batch_to_image_grid(images))
     plt.axis('off')
@@ -74,7 +67,7 @@ def image_reconstruction(model, test_data, save_path=None):
     plt.axis('off')
     
     if save_path :
-      plt.savefig(save_path + "reconstruction.png")
+        plt.savefig(save_path + "reconstruction.png")
 
     plt.show()
     plt.clf()
@@ -97,38 +90,37 @@ def interpolation(target_images, imgs, labels, model):
 
     # Computing the mean latent vector associated to each image
     for i in target_images:
-
-      img = imgs[i][np.newaxis, ...]
-      label = labels[i][np.newaxis, ...]
-      model_output = model((img, label), is_train = False)
-      img_z = model_output['z_mean']
-      #img_var = model_output['z_log_var']
-      z_vectors.append(img_z)
-      resized_labels.append(label)
+        img = imgs[i][np.newaxis, ...]
+        label = labels[i][np.newaxis, ...]
+        model_output = model((img, label), is_train = False)
+        img_z = model_output['z_mean']
+        #img_var = model_output['z_log_var']
+        z_vectors.append(img_z)
+        resized_labels.append(label)
 
 
     for i in range(4):
-      ratios = np.linspace(0, 1, num=8)
-      vectors = []
+        ratios = np.linspace(0, 1, num=8)
+        vectors = []
 
       # Vectors interpolation
-      for ratio in ratios:
-        v = (1.0 - ratio) * z_vectors[i] + ratio * z_vectors[i+1]
-        vectors.append(v)
+        for ratio in ratios:
+            v = (1.0 - ratio) * z_vectors[i] + ratio * z_vectors[i+1]
+            vectors.append(v)
 
-      vectors = np.asarray(vectors)
+        vectors = np.asarray(vectors)
 
       # Generation
-      for j,v in enumerate(vectors):
-        if j < 4 :
-          z_cond = tf.concat([v, resized_labels[i]], axis=1)
-          logits = model.decoder(z_cond, is_train = False)
-          generated = tf.nn.sigmoid(logits)
+        for j,v in enumerate(vectors):
+            if j < 4 :
+                z_cond = tf.concat([v, resized_labels[i]], axis=1)
+                logits = model.decoder(z_cond, is_train = False)
+                generated = tf.nn.sigmoid(logits)
 
-        else :
-          z_cond = tf.concat([v, resized_labels[i+1]], axis=1)
-          logits = model.decoder(z_cond, is_train = False)
-          generated = tf.nn.sigmoid(logits)
+            else :
+                z_cond = tf.concat([v, resized_labels[i+1]], axis=1)
+                logits = model.decoder(z_cond, is_train = False)
+                generated = tf.nn.sigmoid(logits)
 
         images.append(generated.numpy()[0,:,:,:])
 

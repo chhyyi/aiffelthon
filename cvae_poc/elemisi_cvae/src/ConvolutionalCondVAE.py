@@ -10,75 +10,75 @@ from tensorflow.keras.layers import BatchNormalization, Conv2D, Conv2DTranspose,
 
 class Encoder(tf.keras.Model):
 
-  def __init__(self, latent_dim):
+    def __init__(self, latent_dim):
     
-    super(Encoder, self).__init__()
+        super(Encoder, self).__init__()
 
-    self.maxpool_1 = MaxPool2D()
-    
-    self.enc_block_1 = Conv2D( 
-                        filters=32, 
-                        kernel_size=3, 
-                        strides=(2, 2), 
-                        padding = 'same',
-                        kernel_initializer=he_normal())
-    
-    self.maxpool_2 = MaxPool2D()
-    
-    self.enc_block_2 = Conv2D( 
-                  filters=64, 
-                  kernel_size=3, 
-                  strides=(2, 2), 
-                  padding = 'same',
-                  kernel_initializer=he_normal())
-    
-    self.maxpool_3 = MaxPool2D()
-    
-    self.enc_block_3 = Conv2D( 
-                  filters=128, 
-                  kernel_size=3, 
-                  strides=(2, 2), 
-                  padding = 'same',
-                  kernel_initializer=he_normal())
-            
-    self.maxpool_4 = MaxPool2D()
-    
-    self.enc_block_4 = Conv2D( 
-                  filters=256, 
-                  kernel_size=3, 
-                  strides=(2, 2), 
-                  padding = 'same',
-                  kernel_initializer=he_normal())
-        
-    self.flatten = tf.keras.layers.Flatten()
-    self.dense = tf.keras.layers.Dense(latent_dim + latent_dim)  
+        self.maxpool_1 = MaxPool2D()
+
+        self.enc_block_1 = Conv2D( 
+                            filters=32, 
+                            kernel_size=3, 
+                            strides=(2, 2), 
+                            padding = 'same',
+                            kernel_initializer=he_normal())
+
+        self.maxpool_2 = MaxPool2D()
+
+        self.enc_block_2 = Conv2D( 
+                      filters=64, 
+                      kernel_size=3, 
+                      strides=(2, 2), 
+                      padding = 'same',
+                      kernel_initializer=he_normal())
+
+        self.maxpool_3 = MaxPool2D()
+
+        self.enc_block_3 = Conv2D( 
+                      filters=128, 
+                      kernel_size=3, 
+                      strides=(2, 2), 
+                      padding = 'same',
+                      kernel_initializer=he_normal())
+
+        self.maxpool_4 = MaxPool2D()
+
+        self.enc_block_4 = Conv2D( 
+                      filters=256, 
+                      kernel_size=3, 
+                      strides=(2, 2), 
+                      padding = 'same',
+                      kernel_initializer=he_normal())
+
+        self.flatten = tf.keras.layers.Flatten()
+        self.dense = tf.keras.layers.Dense(latent_dim + latent_dim)  
 
 
-  def __call__(self, conditional_input, latent_dim, is_train):
-     # Encoder block 1
-    x = self.maxpool_1(conditional_input)
-    x = self.enc_block_1(x)
-    x = BatchNormalization(trainable = is_train)(x)
-    x = tf.nn.leaky_relu(x)
-    # Encoder block 2
-    x = self.maxpool_2(x)
-    x = self.enc_block_2(x)
-    x = BatchNormalization(trainable = is_train)(x)
-    x = tf.nn.leaky_relu(x)
-    # Encoder block 3
-    x = self.maxpool_3(x)
-    x = self.enc_block_3(x)
-    x = BatchNormalization(trainable = is_train)(x)
-    x = tf.nn.leaky_relu(x)
-    # Encoder block 4
-    x = self.maxpool_4(x)
-    x = self.enc_block_4(x)
-    x = BatchNormalization(trainable = is_train)(x)
-    x = tf.nn.leaky_relu(x)   
-    
-    x = self.dense(self.flatten(x))
+    def __call__(self, conditional_input, latent_dim, is_train):
+         # Encoder block 1
+        x = self.maxpool_1(conditional_input)
+        x = self.enc_block_1(x)
+        x = BatchNormalization(trainable = is_train)(x)
+        x = tf.nn.leaky_relu(x)
+        # Encoder block 2
+        x = self.maxpool_2(x)
+        x = self.enc_block_2(x)
+        x = BatchNormalization(trainable = is_train)(x)
+        x = tf.nn.leaky_relu(x)
+        # Encoder block 3
+        x = self.maxpool_3(x)
+        x = self.enc_block_3(x)
+        x = BatchNormalization(trainable = is_train)(x)
+        x = tf.nn.leaky_relu(x)
+        # Encoder block 4
+        x = self.maxpool_4(x)
+        x = self.enc_block_4(x)
+        x = BatchNormalization(trainable = is_train)(x)
+        x = tf.nn.leaky_relu(x)   
 
-    return x
+        x = self.dense(self.flatten(x))
+
+        return x
 
 
 
@@ -89,84 +89,84 @@ class Encoder(tf.keras.Model):
 class Decoder(tf.keras.Model):
     
 
-  def __init__(self, batch_size = 32):
+    def __init__(self, batch_size = 32):
 
-    super(Decoder, self).__init__()
+        super(Decoder, self).__init__()
 
-    self.batch_size = batch_size
-    self.dense = tf.keras.layers.Dense(4*4*self.batch_size*8)
-    self.reshape = tf.keras.layers.Reshape(target_shape=(4, 4, self.batch_size*8))
+        self.batch_size = batch_size
+        self.dense = tf.keras.layers.Dense(4*4*self.batch_size*64*8)
+        self.reshape = tf.keras.layers.Reshape(target_shape=(4, 4, self.batch_size*64*8))
 
-    self.dec_block_1 = Conv2DTranspose(
-            filters=256,
-            kernel_size=3,
-            strides=(2, 2),
-            padding='same',
-            kernel_initializer=he_normal())
-    
-    self.upsample_1 = UpSampling2D()
-    self.dec_block_2 = Conv2DTranspose(
-            filters=128,
-            kernel_size=3,
-            strides=(2, 2),
-            padding='same',
-            kernel_initializer=he_normal())
-       
-    self.upsample_2 = UpSampling2D()
-    self.dec_block_3 = Conv2DTranspose(
-            filters=64,
-            kernel_size=3,
-            strides=(2, 2),
-            padding='same',
-            kernel_initializer=he_normal())
+        self.dec_block_1 = Conv2DTranspose(
+                filters=256,
+                kernel_size=3,
+                strides=(2, 2),
+                padding='same',
+                kernel_initializer=he_normal())
 
-    self.upsample_3 = UpSampling2D()
-    self.dec_block_4 = Conv2DTranspose(
-            filters=32,
-            kernel_size=3,
-            strides=(2, 2),
-            padding='same',
-            kernel_initializer=he_normal())
+        self.upsample_1 = UpSampling2D()
+        self.dec_block_2 = Conv2DTranspose(
+                filters=128,
+                kernel_size=3,
+                strides=(2, 2),
+                padding='same',
+                kernel_initializer=he_normal())
 
-    self.upsample_4 = UpSampling2D()
-    self.dec_block_5 = Conv2DTranspose(
-            filters=6, 
-            kernel_size=3, 
-            strides=(1, 1), 
-            padding='same',
-            kernel_initializer=he_normal())
+        self.upsample_2 = UpSampling2D()
+        self.dec_block_3 = Conv2DTranspose(
+                filters=64,
+                kernel_size=3,
+                strides=(2, 2),
+                padding='same',
+                kernel_initializer=he_normal())
 
-  def __call__(self, z_cond, is_train):
-    # Reshape input
-    x = self.dense(z_cond)
-    x = tf.nn.leaky_relu(x)
-    x = self.reshape(x)
-    
-    x = self.upsample_1(x)
-    # Decoder block 1
-    x = self.dec_block_1(x)
-    x = BatchNormalization(trainable = is_train)(x)
-    x = tf.nn.leaky_relu(x)
-    
-    x = self.upsample_2(x)
-    # Decoder block 2
-    x = self.dec_block_2(x)
-    x = BatchNormalization(trainable = is_train)(x)
-    x = tf.nn.leaky_relu(x)
-    
-    x = self.upsample_3(x)
-    # Decoder block 3
-    x = self.dec_block_3(x)
-    x = BatchNormalization(trainable = is_train)(x)
-    x = tf.nn.leaky_relu(x)
-    
-    x = self.upsample_4(x)
-    # Decoder block 4
-    x = self.dec_block_4(x)
-    x = BatchNormalization(trainable = is_train)(x)
-    x = tf.nn.leaky_relu(x)
+        self.upsample_3 = UpSampling2D()
+        self.dec_block_4 = Conv2DTranspose(
+                filters=32,
+                kernel_size=3,
+                strides=(2, 2),
+                padding='same',
+                kernel_initializer=he_normal())
 
-    return self.dec_block_5(x)
+        self.upsample_4 = UpSampling2D()
+        self.dec_block_5 = Conv2DTranspose(
+                filters=6, 
+                kernel_size=3, 
+                strides=(1, 1), 
+                padding='same',
+                kernel_initializer=he_normal())
+
+    def __call__(self, z_cond, is_train):
+        # Reshape input
+        x = self.dense(z_cond)
+        x = tf.nn.leaky_relu(x)
+        x = self.reshape(x)
+
+        x = self.upsample_1(x)
+        # Decoder block 1
+        x = self.dec_block_1(x)
+        x = BatchNormalization(trainable = is_train)(x)
+        x = tf.nn.leaky_relu(x)
+
+        x = self.upsample_2(x)
+        # Decoder block 2
+        x = self.dec_block_2(x)
+        x = BatchNormalization(trainable = is_train)(x)
+        x = tf.nn.leaky_relu(x)
+
+        x = self.upsample_3(x)
+        # Decoder block 3
+        x = self.dec_block_3(x)
+        x = BatchNormalization(trainable = is_train)(x)
+        x = tf.nn.leaky_relu(x)
+
+        x = self.upsample_4(x)
+        # Decoder block 4
+        x = self.dec_block_4(x)
+        x = BatchNormalization(trainable = is_train)(x)
+        x = tf.nn.leaky_relu(x)
+
+        return self.dec_block_5(x)
 
 
 
