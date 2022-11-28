@@ -130,7 +130,7 @@ class Decoder(tf.keras.Model):
 
     self.upsample_4 = UpSampling2D()
     self.dec_block_5 = Conv2DTranspose(
-            filters=3, 
+            filters=6, 
             kernel_size=3, 
             strides=(1, 1), 
             padding='same',
@@ -193,7 +193,7 @@ class ConvCVAE (tf.keras.Model) :
         self.latent_dim = latent_dim
         self.batch_size = batch_size
         self.beta = beta = 1
-        self.image_dim = image_dim = [1024, 1024, 6]              
+        self.image_dim = image_dim              
 
 
     def __call__(self, inputs, is_train):
@@ -205,7 +205,9 @@ class ConvCVAE (tf.keras.Model) :
         logits = self.decoder(z_cond, is_train)
 
         recon_img = tf.nn.sigmoid(logits)
-
+        #temp for debugging
+        #print(input_img.shape, recon_img.shape, input_img, recon_img, sep='\n\n')
+        
         # Loss computation #
         latent_loss = - 0.5 * tf.reduce_sum(1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var), axis=-1) # KL divergence
         reconstr_loss = np.prod((1024,1024)) * tf.keras.losses.binary_crossentropy(tf.keras.backend.flatten(input_img), tf.keras.backend.flatten(recon_img)) # over weighted MSE
