@@ -89,13 +89,13 @@ class Encoder(tf.keras.Model):
 class Decoder(tf.keras.Model):
     
 
-    def __init__(self, batch_size = 32):
+    def __init__(self, batch_size = 4):
 
         super(Decoder, self).__init__()
 
         self.batch_size = batch_size
-        self.dense = tf.keras.layers.Dense(4*4*self.batch_size*64*8)
-        self.reshape = tf.keras.layers.Reshape(target_shape=(4, 4, self.batch_size*64*8))
+        self.dense = tf.keras.layers.Dense(4*4*self.batch_size*8*8)
+        self.reshape = tf.keras.layers.Reshape(target_shape=(4, 4, self.batch_size*8*8))
 
         self.dec_block_1 = Conv2DTranspose(
                 filters=256,
@@ -206,11 +206,15 @@ class ConvCVAE (tf.keras.Model) :
 
         recon_img = tf.nn.sigmoid(logits)
         #temp for debugging
-        #print(input_img.shape, recon_img.shape, input_img, recon_img, sep='\n\n')
         
         # Loss computation #
         latent_loss = - 0.5 * tf.reduce_sum(1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var), axis=-1) # KL divergence
-        reconstr_loss = np.prod((1024,1024)) * tf.keras.losses.binary_crossentropy(tf.keras.backend.flatten(input_img), tf.keras.backend.flatten(recon_img)) # over weighted MSE
+        mse=tf.keras.losses.MeanSquaredError()
+        try:
+            reconstr_loss = np.prod((1024,1024)) * mse(tf.keras.backend.flatten(input_img), tf.keras.backend.flatten(recon_img)) # over weighted MSE
+        except:
+            print('error while input_img shape: {} and recon_img shape: {}'.format(input_img.shape, recon_img.shape, sep='\n\n'))
+            raise
         loss = reconstr_loss + self.beta * latent_loss # weighted ELBO loss
         loss = tf.reduce_mean(loss) 
 

@@ -57,7 +57,7 @@ def image_reconstruction(model, test_data, save_path=None):
     images, labels= next(batch_gen)
     model_output= model((images, labels), is_train = False)
     
-    f = plt.figure(figsize=(64,160))
+    f = plt.figure(figsize=(24,60))
     ax = f.add_subplot(1,2,1)
     ax.imshow(convert_batch_to_image_grid(images))
     plt.axis('off')
