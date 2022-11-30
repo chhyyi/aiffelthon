@@ -18,7 +18,8 @@ class Encoder(tf.keras.Model):
 
         self.enc_block_1 = Conv2D( 
                             filters=32, 
-                            kernel_size=3, 
+                            kernel_size=3,
+                            kernel_regularizer='l1',
                             strides=(2, 2), 
                             padding = 'same',
                             kernel_initializer=he_normal())
@@ -28,6 +29,7 @@ class Encoder(tf.keras.Model):
         self.enc_block_2 = Conv2D( 
                       filters=64, 
                       kernel_size=3, 
+                            kernel_regularizer='l1',
                       strides=(2, 2), 
                       padding = 'same',
                       kernel_initializer=he_normal())
@@ -37,6 +39,7 @@ class Encoder(tf.keras.Model):
         self.enc_block_3 = Conv2D( 
                       filters=128, 
                       kernel_size=3, 
+                            kernel_regularizer='l1',
                       strides=(2, 2), 
                       padding = 'same',
                       kernel_initializer=he_normal())
@@ -46,12 +49,13 @@ class Encoder(tf.keras.Model):
         self.enc_block_4 = Conv2D( 
                       filters=256, 
                       kernel_size=3, 
+                            kernel_regularizer='l1',
                       strides=(2, 2), 
                       padding = 'same',
                       kernel_initializer=he_normal())
 
         self.flatten = tf.keras.layers.Flatten()
-        self.dense = tf.keras.layers.Dense(latent_dim + latent_dim)  
+        self.dense = tf.keras.layers.Dense(latent_dim + latent_dim, kernel_regularizer='l1')
 
 
     def __call__(self, conditional_input, latent_dim, is_train):
@@ -94,12 +98,14 @@ class Decoder(tf.keras.Model):
         super(Decoder, self).__init__()
 
         self.batch_size = batch_size
-        self.dense = tf.keras.layers.Dense(4*4*self.batch_size*8*8)
+        self.dense = tf.keras.layers.Dense(4*4*self.batch_size*8*8, kernel_regularizer='l1')
+                                          
         self.reshape = tf.keras.layers.Reshape(target_shape=(4, 4, self.batch_size*8*8))
 
         self.dec_block_1 = Conv2DTranspose(
                 filters=256,
                 kernel_size=3,
+                   kernel_regularizer='l1',
                 strides=(2, 2),
                 padding='same',
                 kernel_initializer=he_normal())
@@ -108,6 +114,7 @@ class Decoder(tf.keras.Model):
         self.dec_block_2 = Conv2DTranspose(
                 filters=128,
                 kernel_size=3,
+                kernel_regularizer='l1',
                 strides=(2, 2),
                 padding='same',
                 kernel_initializer=he_normal())
@@ -116,6 +123,7 @@ class Decoder(tf.keras.Model):
         self.dec_block_3 = Conv2DTranspose(
                 filters=64,
                 kernel_size=3,
+                kernel_regularizer='l1',
                 strides=(2, 2),
                 padding='same',
                 kernel_initializer=he_normal())
@@ -124,6 +132,7 @@ class Decoder(tf.keras.Model):
         self.dec_block_4 = Conv2DTranspose(
                 filters=32,
                 kernel_size=3,
+                kernel_regularizer='l1',
                 strides=(2, 2),
                 padding='same',
                 kernel_initializer=he_normal())
@@ -131,7 +140,8 @@ class Decoder(tf.keras.Model):
         self.upsample_4 = UpSampling2D()
         self.dec_block_5 = Conv2DTranspose(
                 filters=6, 
-                kernel_size=3, 
+                kernel_size=3,
+                kernel_regularizer='l1',
                 strides=(1, 1), 
                 padding='same',
                 kernel_initializer=he_normal())
